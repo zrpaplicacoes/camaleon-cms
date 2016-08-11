@@ -7,7 +7,7 @@
   See the  GNU Affero General Public License (GPLv3) for more details.
 =end
 class CamaleonCms::Admin::SessionsController < CamaleonCms::CamaleonController
-  skip_before_filter :cama_authenticate
+  skip_before_action :cama_authenticate, raise: false
   before_action :before_hook_session
   after_action :after_hook_session
   before_action :verificate_register_permission, only: [:register]
@@ -28,7 +28,7 @@ class CamaleonCms::Admin::SessionsController < CamaleonCms::CamaleonController
     data_user = params[:user]
     cipher = Gibberish::AES::CBC.new(cama_get_session_id)
     data_user[:password] = cipher.decrypt(data_user[:password]) rescue nil
-    @user = current_site.users.find_by_username(data_user[:username])
+    @user = current_site.users.find_by_login(data_user[:username])
     captcha_validate = captcha_verify_if_under_attack("login")
     r = {user: @user, params: params, password: data_user[:password], captcha_validate: captcha_validate, stop_process: false}; hooks_run("user_before_login", r)
     return if r[:stop_process] # permit to redirect for data completion
@@ -50,7 +50,7 @@ class CamaleonCms::Admin::SessionsController < CamaleonCms::CamaleonController
       else
         flash[:error] = t('camaleon_cms.admin.login.message.invalid_caption')
       end
-      @user = current_site.users.new(data_user)
+      @user = current_site.users.new(data_user.permit!)
       login
     end
   end
@@ -101,7 +101,7 @@ class CamaleonCms::Admin::SessionsController < CamaleonCms::CamaleonController
         return
       else
         flash[:error] = t('camaleon_cms.admin.login.message.send_mail_error')
-        @user = current_site.users.new(data_user)
+        @user = current_site.users.new(data_user.permit!)
       end
     end
   end
@@ -111,7 +111,7 @@ class CamaleonCms::Admin::SessionsController < CamaleonCms::CamaleonController
     if params[:user].present?
       params[:user][:role] = PluginRoutes.system_info["default_user_role"]
       params[:user][:is_valid_email] = false if current_site.need_validate_email?
-      user_data = params[:user]
+      user_data = params.require(:user).permit!
       result = cama_register_user(user_data, params[:meta])
       if result[:result] == false && result[:type] == :captcha_error
         @user.errors[:captcha] = t('camaleon_cms.admin.users.message.error_captcha')

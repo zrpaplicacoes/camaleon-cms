@@ -17,9 +17,9 @@ end
 class CamaleonCms::User < ActiveRecord::Base
   include CamaleonCms::Metas
   include CamaleonCms::CustomFieldsRead
-  self.table_name = "#{PluginRoutes.static_system_info["db_prefix"]}users"
-  attr_accessible :username, :role, :email, :parent_id, :last_login_at, :site_id, :password, :password_confirmation, :first_name, :last_name #, :profile_attributes
-  attr_accessible :is_valid_email
+  self.table_name = PluginRoutes.static_system_info["cama_users_db_table"] || "#{PluginRoutes.static_system_info["db_prefix"]}users"
+  # attr_accessible :username, :role, :email, :parent_id, :last_login_at, :site_id, :password, :password_confirmation, :first_name, :last_name #, :profile_attributes
+  # attr_accessible :is_valid_email
 
   default_scope {order("#{CamaleonCms::User.table_name}.role ASC")}
 
@@ -94,6 +94,10 @@ class CamaleonCms::User < ActiveRecord::Base
   end
 
   # auth
+  def self.find_by_login(login)
+    find_by_username(login) || find_by_email(login)
+  end
+
   def generate_token(column)
     begin
       self[column] = SecureRandom.urlsafe_base64
@@ -118,8 +122,6 @@ class CamaleonCms::User < ActiveRecord::Base
   end
 
   def before_saved
-    self.slug = self.username if self.slug.blank?
-    self.slug = self.slug.to_s.parameterize
     self.role = PluginRoutes.system_info["default_user_role"] if self.role.blank?
   end
 

@@ -78,9 +78,9 @@ class CamaleonCms::Admin::PostsController < CamaleonCms::AdminController
     r = {post: @post, post_type: @post_type}; hooks_run("create_post", r)
     @post = r[:post]
     if @post.valid?
-      @post.set_metas(params[:meta])
-      @post.set_field_values(params[:field_options])
-      @post.set_option("keywords", post_data[:keywords])
+      @post.set_metas(params[:meta].permit!)
+      @post.set_field_values(params[:field_options].permit!)
+      @post.set_option("keywords", post_data[:keywords].permit!)
       flash[:notice] = t('camaleon_cms.admin.post.message.created', post_type: @post_type.decorate.the_title)
       r = {post: @post, post_type: @post_type}; hooks_run("created_post", r)
       redirect_to action: :edit, id: @post.id
@@ -106,9 +106,9 @@ class CamaleonCms::Admin::PostsController < CamaleonCms::AdminController
     r = {post: @post, post_type: @post_type}; hooks_run("update_post", r)
     @post = r[:post]
     if @post.update(post_data)
-      @post.set_metas(params[:meta])
-      @post.set_field_values(params[:field_options])
-      @post.set_option("keywords", post_data[:keywords])
+      @post.set_metas(params[:meta].permit!)
+      @post.set_field_values(params[:field_options].permit!)
+      @post.set_option("keywords", post_data[:keywords].permit!)
       hooks_run("updated_post", {post: @post, post_type: @post_type})
       flash[:notice] = t('camaleon_cms.admin.post.message.updated', post_type: @post_type.decorate.the_title)
       redirect_to action: :edit, id: @post.id

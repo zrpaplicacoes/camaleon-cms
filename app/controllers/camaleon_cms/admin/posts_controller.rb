@@ -8,6 +8,7 @@
 =end
 class CamaleonCms::Admin::PostsController < CamaleonCms::AdminController
   add_breadcrumb I18n.t("camaleon_cms.admin.sidebar.contents")
+  before_action :set_params, only: [:create, :update]
   before_action :set_post_type, :except => [:ajax]
   before_action :set_post, only: ['show','edit','update','destroy']
   skip_before_action :admin_logged_actions, only: [:trash, :restore, :destroy, :ajax], raise: false
@@ -195,4 +196,11 @@ class CamaleonCms::Admin::PostsController < CamaleonCms::AdminController
     post_data[:data_categories] = params[:categories] || []
     post_data
   end
+
+  def set_params
+    params[:meta]          ||= ActionController::Parameters.new
+    params[:field_options] ||= ActionController::Parameters.new
+    params[:options]       ||= ActionController::Parameters.new
+  end
+
 end
